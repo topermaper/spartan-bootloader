@@ -1,8 +1,8 @@
 {   
     "spi": {
-        "bus"     : 1,
-        "device"  : 0,
-        "clock_speed" : 10
+        "bus"         : 1,
+        "device"      : 0,
+        "clock_speed" : 80000000
     },
     "pin_mapping" : {
         "init_b"    : 18,

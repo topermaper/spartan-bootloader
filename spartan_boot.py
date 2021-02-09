@@ -11,12 +11,7 @@ import RPi.GPIO
 
 def parseArgs():
     parser = argparse.ArgumentParser(description='Loads user program to XC6SLX25 memory')
-    parser.add_argument(
-        '-s', '--clock_speed',
-        dest='clock_speed',
-        type=int, default=1000000,
-        help='Clock speed Hz'
-    )
+
     parser.add_argument('-p', '--programfile',
         dest='program_file',
         required=True,
@@ -35,14 +30,7 @@ def parseArgs():
             action="store_const",
             dest="loglevel",
             const=logging.DEBUG,
-            default=logging.WARNING,
-        )
-    parser.add_argument(
-            '-v', '--verbose',
-            help="Be verbose",
-            action="store_const",
-            dest="loglevel",
-            const=logging.INFO,
+            default=logging.INFO
         )
     
     return parser.parse_args()
@@ -52,12 +40,10 @@ def parseArgs():
 class SpartanBootLoader(object):
 
 
-    def __init__(self, program_file, cfg_file, log_level='WARNING'):
+    def __init__(self, program_file, cfg_file, log_level=logging.DEBUG):
         super()
         self.program_file = program_file
         self.cfg_file     = cfg_file
-
-        logging.basicConfig(level=log_level)
 
 
     def parseCfgFile(self):
@@ -90,9 +76,8 @@ class SpartanBootLoader(object):
             init_b    = self._cfg['pin_mapping']['init_b']
             program_b = self._cfg['pin_mapping']['program_b']
 
-            logging.debug("Configurating bus SPI-{}".format(str(spi_bus)))
+            logging.info("Configurating bus SPI-{} with config file '{}'".format(str(spi_bus),self.cfg_file))
 
-            # We may have to trick the driver, https://www.raspberrypi.org/forums/viewtopic.php?t=178629
             spi = spidev.SpiDev(spi_bus, spi_device)
 
             # SPI mode
@@ -120,12 +105,15 @@ class SpartanBootLoader(object):
         RPi.GPIO.output(init_b, 1)
         time.sleep(0.01)
 
-        logging.debug("Loading bytestream --> {} <--".format(binascii.hexlify(self._pf_stream)))
+        logging.info("Loading bytestream ...")
 
+        start_time = time.time()
         # Send bytestream
         spi.writebytes2(self._pf_stream)
 
-        logging.info("Bytestream loaded")
+        end_time = time.time()
+
+        logging.info("Bytestream loaded at {:.3f}Mhz in {:.3f} sec.".format(spi_clock_speed/1000000,end_time-start_time))
         sys.exit(0)
 
 
@@ -137,7 +125,9 @@ class SpartanBootLoader(object):
 
 
 if __name__ == "__main__":
-    # Default log level
     args = parseArgs()
-    bootloader = SpartanBootLoader(program_file=args.program_file, cfg_file=args.cfg_file, log_level=args.loglevel)
+    print(args.loglevel)
+    logging.basicConfig(level=args.loglevel)
+
+    bootloader = SpartanBootLoader(program_file=args.program_file, cfg_file=args.cfg_file)
     bootloader.main()
