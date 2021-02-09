@@ -4,7 +4,6 @@ import logging
 import json
 import sys
 import time
-import binascii
 import RPi.GPIO
 
 
@@ -80,7 +79,7 @@ class SpartanBootLoader(object):
 
             spi = spidev.SpiDev(spi_bus, spi_device)
 
-            # SPI mode
+            # SPI mode 0
             # MSB - Clock is low when idle
             # LSB - Data sampled on the raising edge and shifted out on the falling edge
             spi.mode = 0b00
