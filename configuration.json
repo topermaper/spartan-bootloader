@@ -1,0 +1,13 @@
+{   
+    "spi": {
+        "bus"     : 1,
+        "device"  : 0,
+        "clock_speed" : 10
+    },
+    "pin_mapping" : {
+        "init_b"    : 18,
+        "din"       : 20,
+        "cclk"      : 21,
+        "program_b" : 4
+    }
+}
