@@ -1,0 +1,12 @@
+{   
+    "spi": {
+        "bus"         : 1,
+        "device"      : 1,
+        "clock_speed" : 10000000,
+        "mode"        : 0
+    },
+    "pin_mapping" : {
+        "reset"  : 34,
+        "cs"     : 17
+    }
+}
