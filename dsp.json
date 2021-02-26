@@ -1,12 +1,15 @@
 {   
     "spi": {
-        "bus"         : 1,
-        "device"      : 1,
-        "clock_speed" : 10000000,
-        "mode"        : 0
+        "bus"      : 1,
+        "device"   : 1,
+        "baudrate" : 250000,
+        "mode"     : 2
     },
     "pin_mapping" : {
-        "reset"  : 34,
-        "cs"     : 17
+        "reset" : 34,
+        "cs"    : 17,
+        "miso"  : 19,
+        "mosi"  : 20,
+        "sclk"  : 21
     }
 }

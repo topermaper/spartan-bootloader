@@ -5,6 +5,23 @@ import json
 import sys
 import time
 import RPi.GPIO
+import pigpio
+
+CE0=5
+CE1=6
+MISO=13
+MOSI=19
+SCLK=12
+
+#|  17 | OUT  | High  | SPI1_CE1_DSP   |
+#|  18 | OUT  | High  | SPI1_CE0_FPGA  |
+#|  19 | ALT4 | Low   | SPI1_CE1_MISO  |
+#|  20 | ALT4 | Low   | SPI1_CE1_MOSI  |
+#|  21 | ALT4 | Low   | SPI1_CE1_SCLK  |
+
+
+
+
 
 
 
@@ -62,6 +79,9 @@ class DSPBootLoader(object):
             with open(self.program_file,'rb') as pf:
                 raw_file = pf.read()
 
+            self._pf_stream = raw_file
+
+            '''
             # A 0-255 range integer is converted to bit sequence: 45 --> 00101101
             # Bits are inverted: 00101101 > 10110100
             # Converted back to integer 10110100 --> 180
@@ -72,6 +92,7 @@ class DSPBootLoader(object):
                 print(counter)
                 self._pf_stream += m2l(b)
                 counter+=1
+            '''
 
 
         except OSError:
@@ -79,7 +100,8 @@ class DSPBootLoader(object):
             sys.exit(1)
 
 
-    def loadProgram(self):
+
+    def loadProgramSpiDev(self):
 
         try:
             spi_bus          = self._cfg['spi']['bus']
@@ -129,17 +151,102 @@ class DSPBootLoader(object):
         sys.exit(0)
 
 
+    def loadProgramBitBanging(self):
+
+        logging.info("Configurating bitbanging SPI with config file '{}':".format(self.cfg_file))
+
+        try:
+            baudrate = self._cfg['spi']['baudrate']
+            cs       = self._cfg['pin_mapping']['cs']
+            reset    = self._cfg['pin_mapping']['reset']
+            miso     = self._cfg['pin_mapping']['miso']
+            mosi     = self._cfg['pin_mapping']['mosi']
+            sclk     = self._cfg['pin_mapping']['sclk']
+            print(1)
+
+            logging.info("\tbaudrate = {}".format(baudrate))
+            logging.info("\tcs       = GPIO{}".format(cs))
+            logging.info("\treset    = GPIO{}".format(reset))
+            logging.info("\tmiso     = GPIO{}".format(miso))
+            logging.info("\tmosi     = GPIO{}".format(mosi))
+            logging.info("\tsclk     = GPIO{}".format(sclk))
+            
+            pi = pigpio.pi()
+            print(2)
+            if not pi.connected:
+                exit()
+            print(3)
+
+            pi.bb_spi_open(
+                CS   = cs,
+                MISO = miso,
+                MOSI = mosi,
+                SCLK = sclk,
+                baud = baudrate,
+                spi_flags = 3
+            )
+            print(4)
+        except Exception as ex:
+            logging.error("Could not initialize SPI: {}".format(ex))
+            pi.bb_spi_close(cs)
+            sys.exit(1)
+
+        RPi.GPIO.setmode(RPi.GPIO.BCM)
+        RPi.GPIO.setwarnings(False)
+        RPi.GPIO.setup(reset, RPi.GPIO.OUT)
+        #RPi.GPIO.setup(cs, RPi.GPIO.OUT)
+
+        # Start loading sequence
+        RPi.GPIO.output(reset, 0)
+        time.sleep(0.05)
+        RPi.GPIO.output(reset, 1)
+        time.sleep(0.05)
+        #RPi.GPIO.output(cs, 0)
+        time.sleep(0.05)
+
+        logging.info("Loading bytestream ...")
+
+        start_time = time.time()
+
+        print(len(self._pf_stream))
+        print(type(self._pf_stream))
+        stream = list(self._pf_stream)
+
+        print(stream[:100])
+
+        # Send bytestream
+        buffer_size = 4096
+
+        #count, data = pi.bb_spi_xfer(self._cfg['pin_mapping']['cs'], stream[:4096]) 
+
+        for i in range(0,len(stream),buffer_size):
+            print("sending chunk {} - {}".format(str(i),str(i+buffer_size)))
+            count, data = pi.bb_spi_xfer(self._cfg['pin_mapping']['cs'], stream[i:i+buffer_size]) 
+
+        end_time = time.time()
+
+        logging.info("Bytestream loaded at {} baud in {:.3f} sec.".format(baudrate,end_time-start_time))
+
+
+        pi.bb_spi_close(self._cfg['pin_mapping']['cs'])
+        pi.stop()
+
+        sys.exit(0)
+
+
+
     def main(self):
         self.parseCfgFile()
         self.parseProgramFile()
-        self.loadProgram()
+        #self.loadProgramSpiDev()
+        self.loadProgramBitBanging()
 
 
 
 if __name__ == "__main__":
     args = parseArgs()
-    print(args.loglevel)
     logging.basicConfig(level=args.loglevel)
 
     bootloader = DSPBootLoader(program_file=args.program_file, cfg_file=args.cfg_file)
     bootloader.main()
+
