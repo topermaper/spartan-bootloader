@@ -3,5 +3,8 @@ This app works with python 3, make sure it's installed.
 Install dependencies:
 python3 -m pip install -r requirements.txt
 
-Run from the command line:
+To load Spartan6 FPGA run from the command line:
 python3 spartanboot.py -p <your_fpga_program_file.bin> -c spartan.json
+
+To load ADSP-21489 run from the command line:
+python3 dspboot.py -p bin_examples/DSP-LED-blink5.dat -c dsp.json

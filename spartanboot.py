@@ -40,7 +40,9 @@ class SpartanBootLoader(object):
 
 
     def __init__(self, program_file, cfg_file, log_level=logging.DEBUG):
-        super()
+        logging.basicConfig(format='FPGABOOT %(asctime)s %(message)s',level=args.loglevel)
+        logging.info("Initializing ...")
+
         self.program_file = program_file
         self.cfg_file     = cfg_file
 
@@ -59,7 +61,7 @@ class SpartanBootLoader(object):
         try:
             logging.debug('Reading program file: {}'.format(self.program_file))
             with open(self.program_file,'rb') as pf:
-                self._pf_stream = bytearray(pf.read())
+                self._stream = bytearray(pf.read())
         except OSError:
             logging.error("Could not open/read program file {}".format(self.program_file))
             sys.exit(1)
@@ -76,6 +78,13 @@ class SpartanBootLoader(object):
             program_b = self._cfg['pin_mapping']['program_b']
 
             logging.info("Configurating bus SPI-{} with config file '{}'".format(str(spi_bus),self.cfg_file))
+
+            logging.info("\tspi_bus     = {}".format(spi_bus))
+            logging.info("\tspi_device  = {}".format(spi_device))
+            logging.info("\tclock speed = {}".format(spi_clock_speed))
+            logging.info("\tinit_b      = GPIO{}".format(init_b))
+            logging.info("\tprogram_b   = GPIO{}".format(program_b))
+ 
 
             spi = spidev.SpiDev(spi_bus, spi_device)
 
@@ -108,7 +117,7 @@ class SpartanBootLoader(object):
 
         start_time = time.time()
         # Send bytestream
-        spi.writebytes2(self._pf_stream)
+        spi.writebytes2(self._stream)
 
         end_time = time.time()
 
@@ -125,8 +134,6 @@ class SpartanBootLoader(object):
 
 if __name__ == "__main__":
     args = parseArgs()
-    print(args.loglevel)
-    logging.basicConfig(level=args.loglevel)
 
     bootloader = SpartanBootLoader(program_file=args.program_file, cfg_file=args.cfg_file)
     bootloader.main()
