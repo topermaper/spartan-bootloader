@@ -1,0 +1,13 @@
+{   
+    "spi": {
+        "baudrate"    : 250000,
+        "buffer_size" : 4096
+    },
+    "pin_mapping" : {
+        "reset" : 34,
+        "cs"    : 17,
+        "miso"  : 19,
+        "mosi"  : 20,
+        "sclk"  : 21
+    }
+}
