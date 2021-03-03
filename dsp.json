@@ -1,13 +1,26 @@
-{   
+{
+    "dsp_reset" : 34,
     "spi": {
-        "baudrate"    : 250000,
-        "buffer_size" : 4096
-    },
-    "pin_mapping" : {
-        "reset" : 34,
-        "cs"    : 17,
-        "miso"  : 19,
-        "mosi"  : 20,
-        "sclk"  : 21
+        "1": {
+            "cs" : {
+                "0" : 17
+            },
+            "miso"        : 19,
+            "mosi"        : 20,
+            "sclk"        : 21,
+            "baudrate"    : 500000,
+            "buffer_size" : 4096
+        },
+        "2": {
+            "miso"        : 40,
+            "mosi"        : 41,
+            "sclk"        : 42,
+            "cs" : {
+                "0" : 43,
+                "1" : 44
+            },
+            "baudrate"    : 500000,
+            "buffer_size" : 4096
+        }
     }
 }
